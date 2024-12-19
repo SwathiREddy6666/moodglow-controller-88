@@ -1,4 +1,5 @@
 import { HomeCard } from "@/components/home/HomeCard";
+import { RoomCard } from "@/components/room/RoomCard";
 import { MoodDetector } from "@/components/mood/MoodDetector";
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut } from "lucide-react";
@@ -6,10 +7,32 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
+interface Room {
+  id: number;
+  name: string;
+  deviceCount: number;
+}
+
+interface Home {
+  id: number;
+  name: string;
+  roomCount: number;
+  rooms: Room[];
+}
+
 const Dashboard = () => {
-  const [homes, setHomes] = useState([
-    { id: 1, name: "My Home", roomCount: 3 },
+  const [homes, setHomes] = useState<Home[]>([
+    { 
+      id: 1, 
+      name: "My Home", 
+      roomCount: 2,
+      rooms: [
+        { id: 1, name: "Living Room", deviceCount: 3 },
+        { id: 2, name: "Bedroom", deviceCount: 2 },
+      ]
+    },
   ]);
+  
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -18,6 +41,7 @@ const Dashboard = () => {
       id: homes.length + 1,
       name: `Home ${homes.length + 1}`,
       roomCount: 0,
+      rooms: [],
     };
     setHomes([...homes, newHome]);
     toast({
@@ -28,15 +52,51 @@ const Dashboard = () => {
 
   const addRoom = (homeId: number) => {
     setHomes(
-      homes.map((home) =>
-        home.id === homeId
-          ? { ...home, roomCount: home.roomCount + 1 }
-          : home
-      )
+      homes.map((home) => {
+        if (home.id === homeId) {
+          const newRoom = {
+            id: home.rooms.length + 1,
+            name: `Room ${home.rooms.length + 1}`,
+            deviceCount: 0,
+          };
+          return {
+            ...home,
+            roomCount: home.roomCount + 1,
+            rooms: [...home.rooms, newRoom],
+          };
+        }
+        return home;
+      })
     );
     toast({
       title: "Room Added",
       description: "New room has been added successfully.",
+    });
+  };
+
+  const addDevice = (homeId: number, roomId: number) => {
+    setHomes(
+      homes.map((home) => {
+        if (home.id === homeId) {
+          return {
+            ...home,
+            rooms: home.rooms.map((room) => {
+              if (room.id === roomId) {
+                return {
+                  ...room,
+                  deviceCount: room.deviceCount + 1,
+                };
+              }
+              return room;
+            }),
+          };
+        }
+        return home;
+      })
+    );
+    toast({
+      title: "Device Added",
+      description: "New device has been added successfully.",
     });
   };
 
@@ -68,16 +128,26 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {homes.map((home) => (
+        {homes.map((home) => (
+          <div key={home.id} className="space-y-4">
             <HomeCard
-              key={home.id}
               name={home.name}
               roomCount={home.roomCount}
               onAddRoom={() => addRoom(home.id)}
             />
-          ))}
-        </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ml-8">
+              {home.rooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  name={room.name}
+                  deviceCount={room.deviceCount}
+                  onAddDevice={() => addDevice(home.id, room.id)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
 
         <div className="mt-8">
           <MoodDetector />
