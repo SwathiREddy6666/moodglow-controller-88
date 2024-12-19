@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+.bg-mood-happy {
+  background: linear-gradient(135deg, #FEC6A1 0%, #FEF7CD 100%);
+}
+
+.bg-mood-calm {
+  background: linear-gradient(135deg, #D3E4FD 0%, #E5DEFF 100%);
+}
+
+.bg-mood-energetic {
+  background: linear-gradient(135deg, #FFDEE2 0%, #FDE1D3 100%);
+}
