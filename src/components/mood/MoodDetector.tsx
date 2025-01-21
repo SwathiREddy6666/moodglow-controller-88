@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Video, Type } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export const MoodDetector = () => {
   const [text, setText] = useState("");
@@ -17,16 +18,47 @@ export const MoodDetector = () => {
   const [showDialog, setShowDialog] = useState(false);
   const { toast } = useToast();
 
-  const detectMood = () => {
-    // Simple mock mood detection
-    const moods = ["happy", "calm", "energetic"];
-    const detectedMood = moods[Math.floor(Math.random() * moods.length)];
-    setMood(detectedMood);
-    setShowDialog(true);
-    toast({
-      title: "Mood Detected",
-      description: `Your current mood seems to be ${detectedMood}`,
-    });
+  const { refetch: predictMood } = useQuery({
+    queryKey: ['predict-mood', text],
+    queryFn: async () => {
+      if (!text) return null;
+      const response = await fetch(`http://localhost:3000/predict?text=${encodeURIComponent(text)}`);
+      if (!response.ok) {
+        throw new Error('Failed to predict mood');
+      }
+      return response.json();
+    },
+    enabled: false,
+    onSuccess: (data) => {
+      if (data) {
+        const detectedMood = data.mood || "neutral";
+        setMood(detectedMood);
+        setShowDialog(true);
+        toast({
+          title: "Mood Detected",
+          description: `Your current mood seems to be ${detectedMood}`,
+        });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to detect mood. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const detectMood = async () => {
+    if (!text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter some text first",
+        variant: "destructive",
+      });
+      return;
+    }
+    await predictMood();
   };
 
   return (
