@@ -29,23 +29,25 @@ export const MoodDetector = () => {
       return response.json();
     },
     enabled: false,
-    onSuccess: (data) => {
-      if (data) {
-        const detectedMood = data.mood || "neutral";
-        setMood(detectedMood);
-        setShowDialog(true);
+    meta: {
+      onSuccess: (data: any) => {
+        if (data) {
+          const detectedMood = data.mood || "neutral";
+          setMood(detectedMood);
+          setShowDialog(true);
+          toast({
+            title: "Mood Detected",
+            description: `Your current mood seems to be ${detectedMood}`,
+          });
+        }
+      },
+      onError: () => {
         toast({
-          title: "Mood Detected",
-          description: `Your current mood seems to be ${detectedMood}`,
+          title: "Error",
+          description: "Failed to detect mood. Please try again.",
+          variant: "destructive",
         });
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to detect mood. Please try again.",
-        variant: "destructive",
-      });
+      },
     },
   });
 
